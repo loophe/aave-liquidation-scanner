@@ -56,8 +56,9 @@ const scanner = async() => {
 
 
     request(
-      "https://api.thegraph.com/subgraphs/name/aave/protocol-v3-polygon",
-      users
+    //   "https://api.thegraph.com/subgraphs/name/aave/protocol-v3-polygon",
+        "https://api.thegraph.com/subgraphs/name/aave/protocol-v3-arbitrum",
+        users
     ).then((data) => {
 
       const total_loans = data.users.length
@@ -121,6 +122,7 @@ function parseUsers( payload: { users: any[]; } ) {
 
     var healthFactor = totalCollateralThreshold / totalBorrowed;
     
+    // console.log('userId', user.id)
     // console.log('healthFactor', healthFactor)
     // console.log('totalBorrowed', totalBorrowed)
     // console.log('totalCollateralThreshold', totalCollateralThreshold)

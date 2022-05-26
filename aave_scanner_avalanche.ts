@@ -3,7 +3,7 @@ import { request, gql } from "graphql-request";
 const scanner = async() => {  
 
   var count = 0;
-  var maxCount = 5; 
+  var maxCount = 4; 
   var onceAmount = 1000; 
   
   console.log(`\n${Date().toLocaleString()} fetching unhealthy loans\n`)
@@ -56,7 +56,7 @@ const scanner = async() => {
 
 
     request(
-      "https://api.thegraph.com/subgraphs/name/aave/protocol-v3-polygon",
+      "https://api.thegraph.com/subgraphs/name/aave/protocol-v3-avalanche",
       users
     ).then((data) => {
 
