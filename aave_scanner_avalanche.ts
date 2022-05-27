@@ -14,7 +14,8 @@ const scanner = async() => {
   while( count < maxCount ) {
     let lastTimeStamp = ~~(new Date().getTime() / 1000);
     // let user_id = "0xf37680f16b92747ee8537a7e2ccb0e51a7c52a64"//collateral undifined
-    // let user_id = "0x934a83805958237abcbacd06054a12641799273d" //threshold error on contract  
+    // let user_id = "0x934a83805958237abcbacd06054a12641799273d" //threshold error on contract 
+    // let user_id ='0x00953ad692156624e4da9a64e72edadf6ee178f5' 
     // let user_id_query = `id: "${user_id}",`
     let user_id_query = ""
     let users = gql`
@@ -64,10 +65,10 @@ const scanner = async() => {
       users
     ).then((data) => {
 
-      // const total_loans = data.users.length
+      const total_loans = data.users.length
       const unhealthyLoans = parseUsers(data);
       if ( unhealthyLoans.length > 0 ){
-        console.log(unhealthyLoans) 
+        // console.log(unhealthyLoans) 
         table.push( {"time": Date().toLocaleString(),  unhealthyLoans }) 
         var content  = JSON.stringify(table)                           
         fs.writeFile(path.join(__dirname, `tables/table.json`), content, err => {
@@ -80,8 +81,8 @@ const scanner = async() => {
       }
         // console.log('UnhealthyLoan :',unhealthyLoans[0].user_id)
 
-      // if ( total_loans > 0 ) 
-      //   console.log( `Records:${total_loans} Unhealthy:${unhealthyLoans.length}\n`)
+      if ( total_loans > 0 ) 
+        console.log( `Records:${total_loans} Unhealthy:${unhealthyLoans.length}\n`)
         
     });
 
@@ -132,11 +133,11 @@ function parseUsers( payload: { users: any[]; } ) {
       var principalATokenBalance = collateralReserve.currentATokenBalance
       totalCollateral += priceInEth * principalATokenBalance / (10**collateralReserve.reserve.decimals)
 
-      if ( collateralReserve.reserve.symbol == 'DAI.e' || collateralReserve.reserve.symbol == 'USDC' ){
-        totalCollateralThreshold += priceInEth * principalATokenBalance * ( 0.975 / (10**collateralReserve.reserve.decimals))//Token DAI.e and USDC threshold is 97.5%
-      }else{
+      // if ( collateralReserve.reserve.symbol == 'DAI.e' || collateralReserve.reserve.symbol == 'USDC' ){
+      //   totalCollateralThreshold += priceInEth * principalATokenBalance * ( 0.975 / (10**collateralReserve.reserve.decimals))//Token DAI.e and USDC threshold is 97.5%
+      // }else{
         totalCollateralThreshold += priceInEth * principalATokenBalance * (collateralReserve.reserve.reserveLiquidationThreshold/10000)/ (10**collateralReserve.reserve.decimals)
-      }
+      // }
       
       if (collateralReserve.reserve.reserveLiquidationBonus > max_collateralBonus){
         max_collateralSymbol = collateralReserve.reserve.symbol
@@ -146,7 +147,7 @@ function parseUsers( payload: { users: any[]; } ) {
     });
 
     var healthFactor = totalCollateralThreshold / totalBorrowed;
-    // console.log('userId', user.id)
+    // console.log(`\nuserId`, user.id)
     // console.log('healthFactor', healthFactor)
     // console.log('totalBorrowed', totalBorrowed)
     // console.log('totalCollateralThreshold', totalCollateralThreshold)
