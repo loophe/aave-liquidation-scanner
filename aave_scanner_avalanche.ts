@@ -2,17 +2,18 @@ import { request, gql } from "graphql-request";
 import fs from "fs";
 import path from "path";
 
-var table: any[] = [];
 
-const scanner = async() => {  
 
+export async function scanner() {  
+
+  var table: any[] = [];
   var count = 0;
   var maxCount = 4; 
   var onceAmount = 1000; 
   
-  console.log(`\n${Date().toLocaleString()} fetching unhealthy loans`)
+  console.log(`\nfetching unhealthy loans`)
   while( count < maxCount ) {
-    let lastTimeStamp = ~~(new Date().getTime() / 1000);
+    // let lastTimeStamp = ~~(new Date().getTime() / 1000);
     // let user_id = "0xf37680f16b92747ee8537a7e2ccb0e51a7c52a64"//collateral undifined
     // let user_id = "0x934a83805958237abcbacd06054a12641799273d" //threshold error on contract 
     // let user_id ='0x00953ad692156624e4da9a64e72edadf6ee178f5' 
@@ -60,35 +61,42 @@ const scanner = async() => {
 
 
 
-    request(
+    var data = await request(
       "https://api.thegraph.com/subgraphs/name/aave/protocol-v3-avalanche",
       users
-    ).then((data) => {
+    )
+    const unhealthyLoans = parseUsers(data)
+    if ( unhealthyLoans.length > 0 ){
+      table.push( {"time": Date().toLocaleString(),  unhealthyLoans }) 
+    }
+    // .then((data) => {
 
-      const total_loans = data.users.length
-      const unhealthyLoans = parseUsers(data);
-      if ( unhealthyLoans.length > 0 ){
-        // console.log(unhealthyLoans) 
-        table.push( {"time": Date().toLocaleString(),  unhealthyLoans }) 
-        var content  = JSON.stringify(table)                           
-        fs.writeFile(path.join(__dirname, `tables/table.json`), content, err => {
-          if (err) {
-          console.error(err)
-          return
-          }
-          //file written successfully
-        })
-      }
-        // console.log('UnhealthyLoan :',unhealthyLoans[0].user_id)
+    //   const total_loans = data.users.length
+    //   const unhealthyLoans = parseUsers(data);
+    //   if ( unhealthyLoans.length > 0 ){
+    //     // console.log(unhealthyLoans) 
+    //     table.push( {"time": Date().toLocaleString(),  unhealthyLoans }) 
+    //     var content  = JSON.stringify(table)                           
+    //     fs.writeFile(path.join(__dirname, `tables/table.json`), content, err => {
+    //       if (err) {
+    //       console.error(err)
+    //       return
+    //       }
+    //       //file written successfully
+    //     })
+    //     // return table
+    //   }
+    //     // console.log('UnhealthyLoan :',unhealthyLoans[0].user_id)
 
-      if ( total_loans > 0 ) 
-        console.log( `Records:${total_loans} Unhealthy:${unhealthyLoans.length}\n`)
-        
-    });
+    //   if ( total_loans > 0 ) 
+    //     console.log( `Records:${total_loans} Unhealthy:${unhealthyLoans.length}\n`)
+    //   return table 
+    // });
 
     count++;    
 
   } 
+  return table
 }
 
 // const blackAccountsList = [
@@ -98,7 +106,7 @@ const scanner = async() => {
 
 function parseUsers( payload: { users: any[]; } ) {
 
-  const healthFactorMax = 1 //liquidation can happen when less than 1
+  const healthFactorMax = 1.1 //liquidation can happen when less than 1
   var profit_threshold = 100 * (10**8) //in eth. A bonus below this will be ignored
   const allowedLiquidation = .5 //50% of a borrowed asset can be liquidated
 
@@ -200,12 +208,12 @@ function sleep(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-const excuteScan = async () => {
-  while( 1==1 ){
-    scanner();
-    await sleep(60_000);
-  }  
-}
+// const excuteScan = async () => {
+//   while( 1==1 ){
+//     scanner();
+//     await sleep(60_000);
+//   }  
+// }
 
-excuteScan();
+// excuteScan();
   
