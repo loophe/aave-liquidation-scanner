@@ -1,55 +1,42 @@
 import { ethers } from 'ethers';
-import fs from "fs";
-import path from "path";
-// import { formatReserves } from '@aave/math-utils';
-import {
-  UiPoolDataProvider,
-  // UiIncentiveDataProvider,
-  ChainId,
-} from '@aave/contract-helpers';
+import * as fs from "fs";
+import * as path from "path";
+import { UiPoolDataProvider,ChainId } from '@aave/contract-helpers';
 import { TOKEN_LIST } from './constants';
-import dayjs from 'dayjs';
-
-import 'dotenv/config'
-
 import { scanner } from './aave_scanner_avalanche'
-import { stringify } from 'querystring';
 
-const moralis_key = process.env.MORALIS_KEY
 
-const provider = new ethers.providers.WebSocketProvider(
-    `wss://speedy-nodes-nyc.moralis.io/${moralis_key}/avalanche/mainnet/ws`,
-);
+
+// const provider = new ethers.providers.WebSocketProvider(
+//     `wss://speedy-nodes-nyc.moralis.io/${moralis_key}/avalanche/mainnet/ws`,
+// );
 // const provider = new ethers.providers.JsonRpcProvider(
 //   `https://speedy-nodes-nyc.moralis.io/${moralis_key}/avalanche/mainnet`
 // )
+// const provider = new ethers.providers.Web3Provider(
+//   wsProvider
+// )
+// console.log(provider)
 
-const uiPoolDataProviderAddress= '0xdBbFaFC45983B4659E368a3025b81f69Ab6E5093';//Avalanche c-net
-const lendingPoolAddressProvider = '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb'; //Avalanche c-net
-const lendingPool = '0x794a61358D6845594F94dc1DB02A252b5b4814aD';//Avalanche c-net
-const currentAccount = '0x00953ad692156624e4da9a64e72edadf6ee178f5';//Avalanche c-net
+
+
+// const currentAccount = '0x00953ad692156624e4da9a64e72edadf6ee178f5';//Avalanche c-net
 // const currentAccount = '0x506884697f0bb3715b0ff07ab256bce1e705cf4b';//Avalanche c-net
 // const currentAccount = '0x863c9aade08c7e024a4c7a2884c6024711ccb11a'
 
-const floorAmount = 10 // Variable USD amount lower than this number will be ignored.
-
-// View contract used to fetch all reserves data (including market base currency data), and user reserves
-const poolDataProviderContract = new UiPoolDataProvider({
-  uiPoolDataProviderAddress,
-  provider,
-  chainId: ChainId.avalanche,
-});
-
-//View contract used to check healthy of accounts.
-const lendingPoolContract = new ethers.Contract(
-  lendingPool,
-  ['function getUserAccountData(address user) external view returns ( uint256 totalCollateralETH, uint256 totalDebtETH, uint256 availableBorrowsETH, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor )'],
-  provider
-)
-
 // Object containing array or users aave positions and active eMode category
 // { userReserves, userEmodeCategoryId }
-async function userReserves(currentAccount: string) {
+async function userReserves(currentAccount: string, provider: ethers.providers.Provider ) {
+
+  const uiPoolDataProviderAddress= '0xdBbFaFC45983B4659E368a3025b81f69Ab6E5093';//Avalanche c-net
+  const lendingPoolAddressProvider = '0xa97684ead0e402dC232d5A977953DF7ECBaB3CDb'; //Avalanche c-net
+  const floorAmount = 10 // Variable USD amount lower than this number will be ignored.
+  // View contract used to fetch all reserves data (including market base currency data), and user reserves
+  const poolDataProviderContract = new UiPoolDataProvider({
+    uiPoolDataProviderAddress,
+    provider,
+    chainId: ChainId.avalanche,
+  });
 
   const data = 
     await poolDataProviderContract.getUserReservesHumanized({
@@ -99,7 +86,7 @@ async function userReserves(currentAccount: string) {
       priceOracleAddress,
       ['function latestRoundData() external view returns (uint80 roundId,int256 answer,uint256 startedAt,uint256 updatedAt,uint80 answeredInRound)'],
       provider
-      )
+    )
 
     const priceRes = await priceOracleContract.latestRoundData()
     // console.log(priceRes)
@@ -121,8 +108,7 @@ async function userReserves(currentAccount: string) {
         "scaledVariableDebtInBase":scaledVariableDebtInBase
       }  
       reservesValueInBase.push(valueObject)
-    }
-    
+    }   
 
   }
   // console.log(reservesValueInBase, userReserves)
@@ -190,7 +176,16 @@ async function parseUser( userReserves: any[], userEmodeCategoryId: number) {
 
 
 
-async function excuteScanner() {
+export async function executeScanner(provider: ethers.providers.Provider) {
+
+  const lendingPool = '0x794a61358D6845594F94dc1DB02A252b5b4814aD';//Avalanche c-net
+
+  //View contract used to check healthy of accounts.
+  const lendingPoolContract = new ethers.Contract(
+    lendingPool,
+    ['function getUserAccountData(address user) external view returns ( uint256 totalCollateralETH, uint256 totalDebtETH, uint256 availableBorrowsETH, uint256 currentLiquidationThreshold, uint256 ltv, uint256 healthFactor )'],
+    provider
+  )
 
   console.log(`\nTask started on `, Date().toLocaleString())
 
@@ -231,14 +226,14 @@ async function excuteScanner() {
       }else{
         console.log(accountHealthy,address)
         if ( accountHealthy < 1 )  
-        await userReserves(address)
+        await userReserves(address, provider)
       }      
     }
   
     console.log(`\nTask finished on `, Date().toLocaleString())  
+
   }) 
-    
-  // process.exit()
+
 }
 
 
@@ -247,19 +242,3 @@ function IsInArray(arr: any[],val: string){
   return testStr.indexOf(","+val+",")!=-1;
 }
 
-
-
-
-
-function sleep(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
-const excuteScan = async () => {
-  while( 1==1 ){
-    excuteScanner();
-    await sleep(180_000);
-  }  
-}
-
-excuteScan();
