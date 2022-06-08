@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as path from "path";
 import { UiPoolDataProvider,ChainId } from '@aave/contract-helpers';
 import { TOKEN_LIST } from './constants';
-import { scanner } from './aave_scanner_avalanche'
+import { scanner } from './scanners/aave_scanner_avalanche'
 
 
 
