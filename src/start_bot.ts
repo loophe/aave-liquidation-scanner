@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { executeScanner } from './executeScanner_avalanche';
-import 'dotenv/config';
+import { provider } from './provider'
 
 type KeepAliveParams = {
     provider: ethers.providers.WebSocketProvider;
@@ -58,10 +58,6 @@ const keepAlive = ({
   
   
 const startBot = () => {
-
-    const moralis_key = process.env.MORALIS_KEY
-    const wsUrl = `wss://speedy-nodes-nyc.moralis.io/${moralis_key}/avalanche/mainnet/ws`
-    const provider = new ethers.providers.WebSocketProvider(wsUrl);
 
     keepAlive({
         provider,

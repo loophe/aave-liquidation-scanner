@@ -6,24 +6,6 @@ import { TOKEN_LIST } from './constants';
 import { scanner } from './scanners/aave_scanner_avalanche'
 
 
-
-// const provider = new ethers.providers.WebSocketProvider(
-//     `wss://speedy-nodes-nyc.moralis.io/${moralis_key}/avalanche/mainnet/ws`,
-// );
-// const provider = new ethers.providers.JsonRpcProvider(
-//   `https://speedy-nodes-nyc.moralis.io/${moralis_key}/avalanche/mainnet`
-// )
-// const provider = new ethers.providers.Web3Provider(
-//   wsProvider
-// )
-// console.log(provider)
-
-
-
-// const currentAccount = '0x00953ad692156624e4da9a64e72edadf6ee178f5';//Avalanche c-net
-// const currentAccount = '0x506884697f0bb3715b0ff07ab256bce1e705cf4b';//Avalanche c-net
-// const currentAccount = '0x863c9aade08c7e024a4c7a2884c6024711ccb11a'
-
 // Object containing array or users aave positions and active eMode category
 // { userReserves, userEmodeCategoryId }
 async function userReserves(currentAccount: string, provider: ethers.providers.Provider ) {
@@ -113,8 +95,88 @@ async function userReserves(currentAccount: string, provider: ethers.providers.P
   }
   // console.log(reservesValueInBase, userReserves)
   const result = await parseUser( reservesValueInBase, data.userEmodeCategoryId )
-  console.log(currentAccount, result, data.userEmodeCategoryId)
+  // console.log(currentAccount, result, data.userEmodeCategoryId)
 
+  return result
+
+}
+
+
+
+async function writeResult ( address :string, provider: ethers.providers.Provider) {
+
+  const result = await userReserves( address, provider)
+  const accounts : any [] = []
+  const accountsIndex = {
+    "nextId" :1,
+    "accounts": accounts
+  }
+
+  if 
+  ( result.max_collacteral != '0x' &&
+    result.max_collacteralAmount != 1 &&
+    result.max_reserve != '0x' &&
+    result.max_reserveAmount != 1
+  ) {
+
+    const time = new Date()
+
+    const userResult = {
+      "time": time,
+      "user_id": address,
+      "value": result,    
+    }
+
+    var content = JSON.stringify(userResult)
+
+    fs.readFile(path.join(__dirname, 'accounts',`index.json`), async (err, data) => {
+      if ( data == null ){    
+        accountsIndex.nextId = 2  
+        accounts.push(address) 
+        accountsIndex.accounts = accounts
+        const index = JSON.stringify(accountsIndex)    
+        fs.writeFile(path.join(__dirname, `accounts/index.json`) , index, err => {
+          if (err) {
+            console.error(err)
+            return
+          }
+        })
+        fs.writeFile(path.join(__dirname, `accounts/account1.json`), content, err => {
+          if (err) {
+          console.error(err)
+          return
+          } 
+        })
+      }else{
+        const dataJ = JSON.parse(data.toString());
+       
+        let arr = dataJ.accounts
+        // console.log(arr)
+        let isAdded = IsInArray( arr, address )
+        if ( !isAdded) {//Dont add same account again and again
+          let n = dataJ.nextId
+          arr.push(address)
+          accountsIndex.nextId = n+1
+          accountsIndex.accounts = arr
+          let index = JSON.stringify(accountsIndex)  
+          fs.writeFile( path.join( __dirname,`accounts/index.json`) , index , err => {
+            if (err) {
+              console.error(err)
+              return
+            }
+          })
+      
+          fs.writeFile(path.join(__dirname, `accounts/account${n}.json`), content, err => {
+            if (err) {
+            console.error(err)
+            return
+            }
+            //file written successfully
+          })
+        }       
+      }
+    })
+  }
 }
 
 
@@ -123,6 +185,7 @@ async function parseUser( userReserves: any[], userEmodeCategoryId: number) {
 
   let max_bonus = '10000'
   const result = {
+ 
     "max_collacteral": "0x",
     "max_collacteralAmount": 1,
     "max_reserve": "0x",
@@ -135,7 +198,7 @@ async function parseUser( userReserves: any[], userEmodeCategoryId: number) {
     userReserves.forEach(( reserve, i) => {
       if ( reserve.scaledATokenBalanceInBase >= result.max_collacteralAmount ){
         if ( reserve.bonus > max_bonus){
-          max_bonus = reserve.bonus      
+          max_bonus = reserve.bonus
           result.max_collacteral = reserve.address
           result.max_collacteralAmount = reserve.scaledATokenBalanceInBase
 
@@ -226,7 +289,8 @@ export async function executeScanner(provider: ethers.providers.Provider) {
       }else{
         console.log(accountHealthy,address)
         if ( accountHealthy < 1 )  
-        await userReserves(address, provider)
+        // await userReserves(address, provider)
+        await writeResult( address, provider )
       }      
     }
   

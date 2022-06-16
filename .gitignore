@@ -1,9 +1,11 @@
 /node_modules
 .env
 *.log
-provider.ts
-/tables
+
+/src/tables
 /prices
 example.ts
 /contract
 ethers_sample_fetch.ts
+/src/accounts
+
