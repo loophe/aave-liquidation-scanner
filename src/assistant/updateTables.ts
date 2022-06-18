@@ -1,17 +1,9 @@
 import { ethers } from 'ethers';
 import fs from "fs";
 import path from "path";
-import 'dotenv/config'
-import { scanner } from './aave_scanner_avalanche'
+import { provider } from './provider/provider';
+import { scanner } from './scanners/aave_scanner_avalanche'
 
-const moralis_key = process.env.MORALIS_KEY
-
-const provider = new ethers.providers.WebSocketProvider(
-    `wss://speedy-nodes-nyc.moralis.io/${moralis_key}/avalanche/mainnet/ws`,
-);
-// const provider = new ethers.providers.JsonRpcProvider(
-//   `https://speedy-nodes-nyc.moralis.io/${moralis_key}/avalanche/mainnet`
-// )
 
 
 const lendingPool = '0x794a61358D6845594F94dc1DB02A252b5b4814aD';//Avalanche c-net
@@ -24,7 +16,7 @@ const lendingPoolContract = new ethers.Contract(
   provider
 )
 
-async function excuteScanner() {
+async function updateTables() {
 
   console.log(`\nTask started on `, Date().toLocaleString())
 
@@ -97,7 +89,7 @@ function writetable(arr:any[]){
 //   return testStr.indexOf(","+val+",")!=-1;
 // }
 
-excuteScanner();
+updateTables();
 // writetable(blackAccountTable)
 
 

@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
-import { executeScanner } from './executeScanner_avalanche';
-import { provider } from './provider'
+import { execute } from './execute_avalanche';
+import { provider } from './provider/provider'
 
 type KeepAliveParams = {
     provider: ethers.providers.WebSocketProvider;
@@ -35,7 +35,7 @@ const keepAlive = ({
         }, checkInterval);
 
         while( true ){
-        executeScanner(provider);
+        execute(provider);
         await sleep(600_000);
         } 
 

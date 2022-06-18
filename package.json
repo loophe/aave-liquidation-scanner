@@ -1,7 +1,8 @@
 {
   "scripts": {
-    "start": "npx ts-node --project tsconfig.json src/callBot.ts",
-    "build": "npx tsc",
+    "start": "npx ts-node --project tsconfig.json src/start_bot.ts",
+    "call": "npx ts-node --project tsconfig.json src/call_bot.ts",
+    "gas": "npx ts-node --project tsconfig.json src/gasPrice.ts",
     "clean": "rm -rf build/",
     "prepare": "npm run clean && npm run build",
     "lint": "npx eslint src"
