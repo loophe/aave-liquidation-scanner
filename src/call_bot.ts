@@ -45,9 +45,7 @@ export async function callContract(provider: ethers.providers.WebSocketProvider,
         wavaxPriceOracleAddress,
         ['function latestRoundData() external view returns (uint80 roundId,int256 answer,uint256 startedAt,uint256 updatedAt,uint80 answeredInRound)'],
         provider
-    )
-
-    
+    )    
   
     const result = await userReserves( user_address, provider )
   
@@ -100,9 +98,6 @@ export async function callContract(provider: ethers.providers.WebSocketProvider,
             // if ( gasPending > gasNormal.toNumber())
 
 
-            // console.log(`Transaction gas_price: ${gas}`)
-
-
         }catch(e){
             console.error(e.reason, e.code)
         }
@@ -122,17 +117,17 @@ export async function callContract(provider: ethers.providers.WebSocketProvider,
         // transaction.gasPrice = gasNormal.toNumber() > max_gas ? gasNormal : BigNumber.from(max_gas)
         transaction.gasPrice = BigNumber.from(max_gas)
         console.log(`Transaction gas : ${transaction.gasPrice.toNumber()/(10**9)}`)
-        console.log(transaction)
-        // const signedTx = await signer.sendTransaction(transaction)
-        // console.log(signedTx.hash)
-        // const wethContract = new ethers.Contract(
-        //     collacteral,
-        //     wavaxABI,
-        //     signer
-        //     )
-        // const bale = await wethContract.balanceOf(liqAddress)
-        // const decimals = await wethContract.decimals()
-        // console.log(bale.toString()/10**decimals)
+        // console.log(transaction)
+        const signedTx = await signer.sendTransaction(transaction)
+        console.log(signedTx.hash)
+        const tokenContract = new ethers.Contract(
+            collacteral,
+            wavaxABI,
+            signer
+            )
+        const bale = await tokenContract.balanceOf(liqAddress)
+        const decimals = await tokenContract.decimals()
+        console.log(bale.toString()/10**decimals)
     }
 }
 //      const user = '0x2452F72ECd3e0554Fb7D555a5A1b947d7641cc05'  
